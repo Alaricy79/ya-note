@@ -23,3 +23,18 @@ class TestRoutes(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
+    def test_redirect_for_anonymous_client(self):
+        login_url = reverse('users:login')
+        for name in ('notes:edit',
+                     'notes:delete',
+                     'notes:detail',
+                     'notes:add'):
+            with self.subTest(name=name):
+                if name == 'notes:add':
+                    args = None
+                else:
+                    args = (self.notes.slug,)
+                url = reverse(name, args)
+                redirect_url = f'{login_url}?next={url}'
+                response = self.client.get(url)
+                self.assertRedirects(response, redirect_url)
