@@ -14,6 +14,7 @@ class TestRoutes(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Лев Толстой')
+        cls.reader = User.objects.create(username='Кто Этовообще')
         cls.notes = Note.objects.create(title='Заголовок',
                                         text='Текст',
                                         author=cls.author)
@@ -37,3 +38,16 @@ class TestRoutes(TestCase):
                 redirect_url = f'{login_url}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
+
+    def test_availability_for_note_edit_and_delete(self):
+        users_statuses = (
+            (self.author, HTTPStatus.OK),
+            (self.reader, HTTPStatus.NOT_FOUND),
+        )
+        for user, status in users_statuses:
+            self.client.force_login(user)
+            for name in ('notes:edit', 'notes:delete'):
+                with self.subTest(user=user, name=name):
+                    url = reverse(name, args=(self.notes.slug,))
+                    response = self.client.get(url)
+                    self.assertEqual(response.status_code, status)
