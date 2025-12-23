@@ -31,10 +31,9 @@ class TestRoutes(TestCase):
                      'notes:add'):
             with self.subTest(name=name):
                 if name == 'notes:add':
-                    args = None
+                    url = reverse(name)
                 else:
-                    args = (self.notes.slug,)
-                url = reverse(name, args)
+                    url = reverse(name, args=(self.notes.slug,))
                 redirect_url = f'{login_url}?next={url}'
                 response = self.client.get(url)
                 self.assertRedirects(response, redirect_url)
