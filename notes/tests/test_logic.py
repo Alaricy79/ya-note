@@ -83,8 +83,17 @@ class TestLogic(TestCase):
 
     def test_author_can_edit(self):
         edit_url = reverse('notes:edit', args=(self.note_1.slug,))
-        response = self.auth_client.post(reverse('notes:success'),
-                                         data={'text': self.NEW_TEXT})
-        self.assertRedirects(response, edit_url)
+        response = self.auth_client.post(edit_url,
+                                         data={'title': 'some title',
+                                               'text': self.NEW_TEXT})
+        self.assertRedirects(response, reverse('notes:success'))
         self.note_1.refresh_from_db()
         self.assertEqual(self.note_1.text, self.NEW_TEXT)
+
+    def test_imposter_cant_edit(self):
+        edit_url = reverse('notes:edit', args=(self.note_2.slug,))
+        response = self.auth_client.post(edit_url,
+                                         data={'title': 'some title',
+                                               'text': self.NEW_TEXT})
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
