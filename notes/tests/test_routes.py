@@ -6,6 +6,7 @@ from django.urls import reverse
 
 from notes.models import Note
 
+# Получаем модель пользователя.
 User = get_user_model()
 
 
@@ -14,12 +15,14 @@ class TestRoutes(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Author')
-        cls.reader = User.objects.create(username='Reader')        
-        cls.note = Note.objects.create(title='Заголовок', text='Текст', author = cls.author)   
-        
+        cls.reader = User.objects.create(username='Reader')
+        cls.note = (Note.objects.create(
+            title='Заголовок',
+            text='Текст',
+            author=cls.author))
         cls.add_succ_list_url = ('notes:add', 'notes:success', 'notes:list',)
-        cls.edit_del_detail_url = ('notes:edit', 'notes:delete', 'notes:detail', )
-
+        cls.edit_del_detail_url = ('notes:edit', 'notes:delete',
+                                   'notes:detail',)
 
     def test_pages_availability(self):
         for name in ('notes:home', 'users:login', 'users:signup'):
@@ -31,12 +34,12 @@ class TestRoutes(TestCase):
         users_statuses = (
             (self.author, HTTPStatus.OK),
             (self.reader, HTTPStatus.NOT_FOUND),
-                            )
-        
+        )
+
         for user, status in users_statuses:
             self.client.force_login(user)
-            for name in self.edit_del_detail_url:  
-                with self.subTest(user=user, name=name):        
+            for name in self.edit_del_detail_url:
+                with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))
                     response = self.client.get(url)
                     self.assertEqual(response.status_code, status)
@@ -44,7 +47,7 @@ class TestRoutes(TestCase):
             with self.subTest(self.reader, name=name):
                 url = reverse(name)
                 response = self.client.get(url)
-                self.assertEqual(response.status_code, HTTPStatus.OK)         
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     # служебная функция с повторяющимсся кодом по перенаправлению на логин
     def _assert_redirect_for_anonymous(self, name, args=None):
@@ -60,4 +63,5 @@ class TestRoutes(TestCase):
                 self._assert_redirect_for_anonymous(name)
         for name in self.edit_del_detail_url:
             with self.subTest(name=name):
-                self._assert_redirect_for_anonymous(name, args=(self.note.slug,))
+                self._assert_redirect_for_anonymous(
+                    name, args=(self.note.slug,))
